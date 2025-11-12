@@ -8,6 +8,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BookModule } from './modules/book/book.module';
 import { AuthorModule } from './modules/author/author.module';
 import { SearchModule } from './modules/search/search.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
 
 @Module({
   imports: [
@@ -17,6 +19,13 @@ import { SearchModule } from './modules/search/search.module';
       autoSchemaFile: 'schema.gql',
       sortSchema: true,
       context: ({ req, res }) => ({ req, res }),
+    }),
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST || 'redis',
+      port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+      ttl: 600,
+      isGlobal: true,
     }),
     AuthModule,
     AppConfigModule,
