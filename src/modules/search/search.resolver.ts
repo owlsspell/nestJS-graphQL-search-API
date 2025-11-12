@@ -49,6 +49,7 @@ export class SearchResolver {
     const authors = await authorQB.getMany();
 
     // Book search
+    await this.bookRepo.query(`SELECT set_limit(0.2);`);
     const bookQB = this.bookRepo
       .createQueryBuilder('book')
       .leftJoinAndSelect('book.author', 'author');
@@ -56,15 +57,15 @@ export class SearchResolver {
     // For books: for each term require it to appear in at least one of the fields (title, genre, author name)
     terms.forEach((term, i) => {
       const param = `term${i}`;
-      const value = `%${term}%`;
+
       bookQB.andWhere(
         new Brackets((qb) =>
           qb
-            .where(`LOWER(book.title) LIKE :${param}`)
-            .orWhere(`LOWER(book.genre) LIKE :${param}`)
-            .orWhere(`LOWER(author.name) LIKE :${param}`),
+            .where(`LOWER(book.title) % LOWER(:${param})`)
+            .orWhere(`LOWER(book.genre) % LOWER(:${param})`)
+            .orWhere(`LOWER(author.name) % LOWER(:${param})`),
         ),
-        { [param]: value },
+        { [param]: term },
       );
     });
 
