@@ -1,6 +1,9 @@
-# NestJS GraphQL Template
+# NestJS GraphQL Search API
 
-A production-ready boilerplate/template for building scalable GraphQL APIs with NestJS, TypeORM, and PostgreSQL. This template provides a solid foundation with authentication, Docker support, and best practices out of the box.
+This project is a NestJS GraphQL API for searching authors and books.  
+It is **based on a NestJS boilerplate**: [boilerplate](https://github.com/dmytroPolhul/nestjs-boilerplate).  
+It uses **PostgreSQL** as a database and **Redis** for caching search results.  
+Rate limiting is enabled to prevent excessive requests.
 
 ## Tech Stack
 
@@ -47,7 +50,7 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 git clone <repository-url>
-cd boilerplate-for-test
+cd graphQL-API-searching
 ```
 
 ### 2. Install dependencies
@@ -86,6 +89,8 @@ DB_LOGGING=true
 
 JWT_SECRET=your-secret-key-here
 JWT_EXPIRE_IN=6000
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ### 4. Database Setup
@@ -124,6 +129,7 @@ npm run start:prod
 ```
 
 The application will be available at:
+
 - **API**: http://localhost:8000
 - **GraphQL Playground**: http://localhost:8000/graphql
 
@@ -138,7 +144,9 @@ docker compose up
 ```
 
 This will:
+
 - Start PostgreSQL database on port 5432
+- Redis runs on port 6379
 - Build and start the NestJS application on port 8000
 - Run migrations automatically
 - Enable hot-reload for development
@@ -174,7 +182,10 @@ src/
 ├── modules/             # Feature modules
 │   ├── auth/           # Authentication module (JWT, guards, strategies)
 │   ├── baseModule/     # Base repository and service patterns
-│   └── user/           # User module (CRUD operations)
+│   ├── user/           # User module (CRUD operations)
+│   ├── book/              # Book module (CRUD, relations)
+│   ├── author/            # Author module (CRUD, relations)
+│   └── search/            # Search module (GraphQL search resolver)
 ├── app.module.ts       # Root application module
 └── main.ts            # Application entry point
 ```
@@ -184,7 +195,7 @@ src/
 ### Development
 
 ```bash
-npm run start          # Start the application
+npm run start          # Start the application. Server runs on http://localhost:8000/graphql
 npm run start:dev      # Start with watch mode
 npm run start:debug    # Start with debug mode
 ```
@@ -257,7 +268,74 @@ npm run mr
 npm run mre
 ```
 
-##  Authentication
+### Run database migrations or seed script:
+
+```bash
+npm run seed        # This will populate the database with sample authors and books.
+```
+
+## Example Search GraphQL Query
+
+```graphql
+query {
+  search(
+    query: "search"
+    filters: {
+      genre: "genre name"
+      publicationYearFrom: 2000
+      publicationYearTo: 2025
+    }
+  ) {
+    authors {
+      name
+    }
+    books {
+      title
+      genre
+      publicationYear
+      author {
+        name
+      }
+    }
+  }
+}
+```
+
+Sample Response:
+
+```graphql
+{
+  "data": {
+    "search": {
+      "authors": [
+        { "name": "J.K. Rowling" },
+      ],
+      "books": [
+        {
+          "title": "Harry Potter and the Goblet of Fire",
+          "genre": "Fantasy",
+          "publicationYear": 2000,
+          "author": { "name": "J.K. Rowling" }
+        }
+      ]
+    }
+  }
+}
+```
+
+### Rate Limiting
+
+Rate limiting is enabled via @nestjs/throttler
+
+Default: 10 requests per 6000 sec per IP
+
+If the limit is exceeded, the server returns 429 Too Many Requests
+
+### Caching with Redis
+
+Search results are cached in Redis for 10 minutes (TTL)
+
+## Authentication
 
 The template includes a complete authentication system:
 
@@ -269,12 +347,10 @@ The template includes a complete authentication system:
 ### Example GraphQL Queries
 
 #### Register/Login
+
 ```graphql
 mutation {
-  register(input: {
-    email: "user@example.com"
-    password: "password123"
-  }) {
+  register(input: { email: "user@example.com", password: "password123" }) {
     accessToken
     user {
       id
@@ -327,6 +403,7 @@ All configuration is managed through environment variables. See `.env-example` f
 ### TypeORM Configuration
 
 Database configuration is located in `src/config/orm.config.ts` with:
+
 - Custom naming strategy
 - Migration paths
 - Logging configuration
@@ -335,6 +412,7 @@ Database configuration is located in `src/config/orm.config.ts` with:
 ### GraphQL Configuration
 
 GraphQL is configured in `app.module.ts` with:
+
 - Auto schema generation
 - GraphQL Playground enabled
 - Context injection for request/response

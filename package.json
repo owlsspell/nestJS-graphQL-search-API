@@ -24,7 +24,8 @@
     "mg": "npm run typeorm -- --d src/config/orm.config.ts migration:generate ./src/database/migrations/${NAME}",
     "mr": "npm run typeorm -- --d src/config/orm.config.ts migration:run",
     "mre": "npm run typeorm -- --d src/config/orm.config.ts migration:revert",
-    "pre-commit": "npm run lint && npm run format"
+    "pre-commit": "npm run lint && npm run format",
+    "seed": "npx ts-node src/database/seeder.ts"
   },
   "dependencies": {
     "@apollo/server": "4.9.4",
