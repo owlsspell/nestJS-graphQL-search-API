@@ -1,4 +1,4 @@
-version: "1.0"
+version: '1.0'
 services:
   database:
     image: postgres:12
@@ -15,9 +15,24 @@ services:
     volumes:
       - nps_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 30s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - '6379:6379'
+    networks:
+      - base-network
+    restart: unless-stopped
+    command: ['redis-server', '--save', '60', '1', '--loglevel', 'warning']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
       retries: 5
 
   app:
@@ -35,13 +50,17 @@ services:
       - POSTGRES_DB=postgres
       - DB_HOST=database
       - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     networks:
       - base-network
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 volumes:
-  nps_data: { }
+  nps_data: {}
 networks:
   base-network:

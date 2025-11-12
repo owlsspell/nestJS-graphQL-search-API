@@ -8,6 +8,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BookModule } from './modules/book/book.module';
 import { AuthorModule } from './modules/author/author.module';
 import { SearchModule } from './modules/search/search.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { GraphQLThrottlerGuard } from './common/guards/graphql-throttler.guard';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 
@@ -27,6 +30,14 @@ import * as redisStore from 'cache-manager-ioredis';
       ttl: 600,
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 6000, //in seconds
+          limit: 10,
+        },
+      ],
+    }),
     AuthModule,
     AppConfigModule,
     DatabaseModule,
@@ -36,5 +47,11 @@ import * as redisStore from 'cache-manager-ioredis';
     SearchModule,
   ],
   controllers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GraphQLThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
