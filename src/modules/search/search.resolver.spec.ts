@@ -56,6 +56,7 @@ describe('SearchResolver', () => {
 
     jest.spyOn(authorRepo, 'createQueryBuilder').mockReturnValue(authorQB);
     jest.spyOn(bookRepo, 'createQueryBuilder').mockReturnValue(bookQB);
+    jest.spyOn(bookRepo, 'query').mockResolvedValue([]);
   });
 
   it('should be defined', () => {
