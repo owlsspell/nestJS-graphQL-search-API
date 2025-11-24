@@ -155,4 +155,12 @@ export abstract class CrudRepository<T extends ObjectLiteral> {
     const service = repository || this.repository;
     return service.manager.connection.createQueryRunner();
   }
+
+  public query(sql: string, params?: any[]) {
+    return this.repository.query(sql, params);
+  }
+
+  public createQueryBuilder(alias: string) {
+    return this.repository.createQueryBuilder(alias);
+  }
 }
