@@ -7,6 +7,7 @@ import { SearchRepository } from './search.repository';
 import { AuthorsRepository } from '../author/authors.repository';
 import { BooksRepository } from '../book/books.repository';
 import { SearchService } from './search.service';
+import { AuthorsLoader } from '../author/authors.loader';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Author, Book])],
@@ -16,6 +17,7 @@ import { SearchService } from './search.service';
     AuthorsRepository,
     BooksRepository,
     SearchService,
+    AuthorsLoader,
   ],
   exports: [SearchRepository],
 })
