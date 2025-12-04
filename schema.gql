@@ -10,6 +10,7 @@ type Author {
 
 type Book {
   author: Author!
+  authorId: Author!
   genre: String!
   id: Int!
   publicationYear: Int!
